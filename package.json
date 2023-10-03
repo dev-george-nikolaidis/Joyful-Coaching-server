@@ -4,7 +4,7 @@
   "description": "",
   "main": "src/api/v1/app.ts",
   "scripts": {
-    "start": "node ./dist/app.js",
+    "start": "node dist/app.js",
     "dev": "nodemon src/api/app.ts",
     "build": "tsc",
     "lint": "eslint --fix src test"
