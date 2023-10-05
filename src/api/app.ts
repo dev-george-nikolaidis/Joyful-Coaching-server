@@ -1,3 +1,4 @@
+import cookieParser from "cookie-parser";
 import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
@@ -17,7 +18,7 @@ app.use(
 		origin: "*",
 	})
 );
-app.use(express.json());
+app.use(express.json(), cookieParser());
 
 app.use("/api/v1", api);
 
