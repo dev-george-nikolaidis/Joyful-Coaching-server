@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 import { pool } from "../config/db";
 import { loginUserPayload, registerUserPayload } from "./users.interfaces";
 
-// @desc    get  user
+// @desc    login user
 // @route   GET /api/v1/users/login
 // @access  public
 export async function loginUser(req: Request<{}, never, loginUserPayload>, res: Response, next: NextFunction) {
@@ -14,7 +14,6 @@ export async function loginUser(req: Request<{}, never, loginUserPayload>, res: 
 		// Check for user email
 		const query = "SELECT * FROM users WHERE email = $1";
 		const user = await pool.query(query, [email]);
-		// console.log(user.rows[0].password);
 		if (user && (await bcrypt.compare(password, user.rows[0].password))) {
 			// we need those critical details about the user in the client ?
 			const self = {
@@ -23,20 +22,9 @@ export async function loginUser(req: Request<{}, never, loginUserPayload>, res: 
 				email: user.rows[0].email,
 			};
 
-			res
-				.cookie("accessToken", _generateToken(user.rows[0].id), {
-					httpOnly: true,
-					secure: process.env.NODE_ENV === "production",
-				})
-				.status(200)
-				.json("Welcome");
-
-			// .json({
-			// 	id: user.rows[0].id,
-			// 	// username: user.rows[0].username,
-			// 	email: user.rows[0].email,
-			// 	token: _generateToken(user.rows[0].id),
-			// });
+			res.status(200).json({
+				token: _generateToken(user.rows[0].id),
+			});
 		} else {
 			res.status(401).send("Invalid credentials");
 		}
@@ -47,7 +35,7 @@ export async function loginUser(req: Request<{}, never, loginUserPayload>, res: 
 
 // @desc    create  user
 // @route   POST /api/v1/users/register
-// @access  Public
+// @access  Private
 export async function registerUser(req: Request<{}, never, registerUserPayload>, res: Response, next: NextFunction) {
 	const { email, password } = req.body;
 
@@ -61,7 +49,51 @@ export async function registerUser(req: Request<{}, never, registerUserPayload>,
 		const self = await pool.query(query, values);
 		res.status(200).json(self.rows[0]);
 	} catch (error) {
-		// console.log(error);
+		next(error);
+	}
+}
+
+// @desc    update password
+// @route   POST /api/v1/users/password-update
+// @access  private
+
+export async function updatePassword(req: Request<{}, never, { password: string; id: number }>, res: Response, next: NextFunction) {
+	const { id, password } = req.body;
+
+	try {
+		// find the user
+		const query = "SELECT * FROM users WHERE id = $1";
+		const user = await pool.query(query, [id]);
+
+		//make new jwt
+		const salt = await bcrypt.genSalt(10);
+		const hashedPassword = await bcrypt.hash(password, salt);
+
+		//update in database
+		const updateQuery = `UPDATE  users SET password = $1 Where id = $2`;
+		await pool.query(updateQuery, [hashedPassword, id]);
+
+		const newToken = await pool.query(query, [id]);
+		const updatedUser = await pool.query(query, [id]);
+		//send back the new one
+		res.status(200).json(_generateToken(updatedUser.rows[0].id));
+	} catch (error) {
+		next(error);
+	}
+}
+
+// @desc    get user infos
+// @route   POST /api/v1/users/account-info
+// @access  private
+
+export async function getUserInfo(req: Request<{}, never, { token: string; id: number }>, res: Response, next: NextFunction) {
+	const { id } = req.body;
+
+	try {
+		const query = "SELECT * FROM users WHERE id = $1";
+		const user = await pool.query(query, [id]);
+		res.status(200).json(user.rows[0]);
+	} catch (error) {
 		next(error);
 	}
 }

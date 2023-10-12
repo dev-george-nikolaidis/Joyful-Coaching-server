@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import express from "express";
 import helmet from "helmet";
 import morgan from "morgan";
+
 import api from "./v1/index-routes";
 import { errorHandler } from "./v1/middlewares/error-handler";
 import { notFound } from "./v1/middlewares/not-found";
@@ -22,9 +23,6 @@ app.use(express.json(), cookieParser());
 
 app.use("/api/v1", api);
 
-app.get("/", (req, res) => {
-	res.send("Hi");
-});
 app.use(notFound);
 app.use(errorHandler);
 
