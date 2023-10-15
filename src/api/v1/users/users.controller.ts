@@ -1,6 +1,8 @@
+import axios from "axios";
 import bcrypt from "bcrypt";
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
+import nodemailer from "nodemailer";
 import { pool } from "../config/db";
 import { loginUserPayload, registerUserPayload } from "./users.interfaces";
 
@@ -22,11 +24,40 @@ export async function loginUser(req: Request<{}, never, loginUserPayload>, res: 
 				email: user.rows[0].email,
 			};
 
-			res.status(200).json({
+			return res.status(200).json({
 				token: _generateToken(user.rows[0].id),
 			});
 		} else {
-			res.status(401).send("Invalid credentials");
+			return res.status(401).send("Invalid credentials");
+		}
+	} catch (error) {
+		next(error);
+	}
+}
+
+// @desc  	Password reset
+// @route   Put /api/v1/users/password-rest-login
+// @access  Private
+export async function passwordRestLogin(req: Request<{}, never, { id: number; password: string; token: string }>, res: Response, next: NextFunction) {
+	const { id, password, token } = req.body;
+
+	try {
+		// Check for user email
+		const query = "SELECT * FROM users WHERE id = $1";
+		const user = await pool.query(query, [id]);
+		console.log(user);
+		if (user.rows[0].password_reset_token === token) {
+			// we need those critical details about the user in the client ?
+			const self = {
+				id: user.rows[0].id,
+				// username: user.rows[0].username,
+				email: user.rows[0].email,
+			};
+			return res.status(200).json({
+				token: _generateToken(user.rows[0].id),
+			});
+		} else {
+			return res.status(401).send("Invalid credentials");
 		}
 	} catch (error) {
 		next(error);
@@ -37,24 +68,28 @@ export async function loginUser(req: Request<{}, never, loginUserPayload>, res: 
 // @route   POST /api/v1/users/register
 // @access  Private
 export async function registerUser(req: Request<{}, never, registerUserPayload>, res: Response, next: NextFunction) {
-	const { email, password } = req.body;
+	const { email, password, token } = req.body;
 
 	try {
-		// Hash password
-		const salt = await bcrypt.genSalt(10);
-		const hashedPassword = await bcrypt.hash(password, salt);
-
-		const query = `INSERT INTO users(email,password) VALUES($1,$2) RETURNING *`;
-		const values = [email, hashedPassword];
-		const self = await pool.query(query, values);
-		res.status(200).json(self.rows[0]);
+		const validateToken = await axios.post(`https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_KEY}&response=${token}`);
+		if (validateToken.data.success) {
+			// Hash password
+			const salt = await bcrypt.genSalt(10);
+			const hashedPassword = await bcrypt.hash(password, salt);
+			const query = `INSERT INTO users(email,password) VALUES($1,$2) RETURNING *`;
+			const values = [email, hashedPassword];
+			const self = await pool.query(query, values);
+			return res.status(200).json(self.rows[0]);
+		} else {
+			return res.status(402).json("fail");
+		}
 	} catch (error) {
 		next(error);
 	}
 }
 
 // @desc    update password
-// @route   POST /api/v1/users/password-update
+// @route   PUT /api/v1/users/password-update
 // @access  private
 
 export async function updatePassword(req: Request<{}, never, { password: string; id: number }>, res: Response, next: NextFunction) {
@@ -76,7 +111,7 @@ export async function updatePassword(req: Request<{}, never, { password: string;
 		const newToken = await pool.query(query, [id]);
 		const updatedUser = await pool.query(query, [id]);
 		//send back the new one
-		res.status(200).json(_generateToken(updatedUser.rows[0].id));
+		return res.status(200).json(_generateToken(updatedUser.rows[0].id));
 	} catch (error) {
 		next(error);
 	}
@@ -90,19 +125,97 @@ export async function getUserInfo(req: Request<{}, never, { token: string; id: n
 	const { id } = req.body;
 
 	try {
-		const query = "SELECT * FROM users WHERE id = $1";
-		const user = await pool.query(query, [id]);
-		res.status(200).json(user.rows[0]);
+		const userQuery = "SELECT * FROM users WHERE id = $1";
+		const user = await pool.query(userQuery, [id]);
+
+		const getSessions = "SELECT * FROM appointments WHERE user_id = $1 ORDER BY date;";
+		const appointments = await pool.query(getSessions, [id]);
+
+		const currentOpenAppointments = appointments.rows.filter((a) => {
+			const today = new Date();
+			const appointmentDate = new Date(a.date);
+
+			if (today.getTime() < appointmentDate.getTime()) {
+				return a;
+			}
+		});
+		const payload = {
+			userTable: user.rows[0],
+			appointmentsTable: currentOpenAppointments,
+		};
+		return res.status(200).json(payload);
+	} catch (error) {
+		next(error);
+	}
+}
+
+// @desc    Reset user password
+// @route   POST /api/v1/users/password-reset
+// @access  public
+export async function passwordReset(req: Request<{}, never, { email: string }>, res: Response, next: NextFunction) {
+	const { email } = req.body;
+	console.log(email);
+
+	// check if we have user with this email.
+	const userQuery = "SELECT * FROM users WHERE email = $1";
+	const user = await pool.query(userQuery, [email]);
+
+	if (user.rows[0] === undefined) {
+		return res.status(200).json({ message: "No user" });
+	}
+	const user_id = user.rows[0].id;
+	//create new token
+	const token = _generateToken(user_id, "15m");
+	// console.log(`token  ${token}`);
+
+	// update
+	const updateQuery = `UPDATE  users SET password_reset_token = $1 Where id = $2`;
+	await pool.query(updateQuery, [token, user_id]);
+
+	let transporter = nodemailer.createTransport({
+		host: "smtp.gmail.com",
+		service: "gmail",
+		auth: {
+			user: process.env.EMAIL,
+			pass: process.env.EMAIL_APP_PASSWORD,
+		},
+	});
+
+	const mailOptions = {
+		from: process.env.EMAIL,
+		to: email,
+		subject: "Reset account password link",
+		html: `
+		<h3>Please click the link below to reset your password</h3>
+		<p>${process.env.Client_DOMAIN}/user/enter-new-password?token=${token}</p>`,
+		// text: "Email content",
+	};
+
+	try {
+		transporter.sendMail(mailOptions, function (error, info) {
+			if (error) {
+				console.log(error);
+				return res.status(400).json({ error: "reset password link error", mailerError: error });
+			} else {
+				return res.status(200).json({ success: "Email has been sent,please follow the instructions" });
+			}
+		});
 	} catch (error) {
 		next(error);
 	}
 }
 
 // Generate JWT
-const _generateToken = (id: any) => {
+const _generateToken = (id: any, customExpirationTime?: string) => {
 	const jwtSecret = process.env.JWT_SECRET as string;
-	const jwtExpTime = process.env.JWT_TOKEN_EXPIRATION || 1;
+	let jwtExpTime;
+	if (customExpirationTime) {
+		jwtExpTime = customExpirationTime;
+	} else {
+		jwtExpTime = process.env.JWT_TOKEN_EXPIRATION || 1;
+	}
+
 	return jwt.sign({ id }, jwtSecret, {
-		expiresIn: `${jwtExpTime}d`,
+		expiresIn: `${jwtExpTime}`,
 	});
 };
