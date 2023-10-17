@@ -4,8 +4,8 @@ CREATE TABLE IF NOT EXISTS  users(
 	email TEXT NOT NULL UNIQUE,
 	password TEXT NOT NULL,
 	role varchar DEFAULT 'user',
-	password_reset_token TEXT DEFAULT '',
 	appointments  smallint default 0 CHECK(appointments >= 0),
+	password_reset_token TEXT DEFAULT '',
 	created_on timestamp default CURRENT_TIMESTAMP not null,
     updated_on timestamp default CURRENT_TIMESTAMP not null
 

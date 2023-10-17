@@ -23,7 +23,7 @@ export const userLoginSchema = z.object({
 				required_error: "Email is required",
 			})
 			.email("Not a valid email"),
-		password: z.string({ required_error: "Password is required" }).min(6),
+		password: z.string({ required_error: "Password is required" }).min(6, "Small password"),
 	}),
 });
 

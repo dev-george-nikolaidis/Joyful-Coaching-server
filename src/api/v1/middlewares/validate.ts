@@ -11,6 +11,6 @@ export const validate = (schema: AnyZodObject) => async (req: Request, res: Resp
 
 		next();
 	} catch (error) {
-		res.status(400).json(error);
+		res.status(200).json({ zodErrors: error });
 	}
 };

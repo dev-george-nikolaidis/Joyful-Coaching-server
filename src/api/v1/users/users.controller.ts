@@ -11,12 +11,12 @@ import { loginUserPayload, registerUserPayload } from "./users.interfaces";
 // @access  public
 export async function loginUser(req: Request<{}, never, loginUserPayload>, res: Response, next: NextFunction) {
 	const { email, password } = req.body;
-
 	try {
 		// Check for user email
 		const query = "SELECT * FROM users WHERE email = $1";
 		const user = await pool.query(query, [email]);
-		if (user && (await bcrypt.compare(password, user.rows[0].password))) {
+
+		if (user.rows[0] && (await bcrypt.compare(password, user.rows[0].password))) {
 			// we need those critical details about the user in the client ?
 			const self = {
 				id: user.rows[0].id,
@@ -28,7 +28,7 @@ export async function loginUser(req: Request<{}, never, loginUserPayload>, res: 
 				token: _generateToken(user.rows[0].id),
 			});
 		} else {
-			return res.status(401).send("Invalid credentials");
+			return res.status(200).json({ Invalid: "Invalid credentials" });
 		}
 	} catch (error) {
 		next(error);
@@ -48,16 +48,19 @@ export async function passwordRestLogin(req: Request<{}, never, { id: number; pa
 		console.log(user);
 		if (user.rows[0].password_reset_token === token) {
 			// we need those critical details about the user in the client ?
-			const self = {
-				id: user.rows[0].id,
-				// username: user.rows[0].username,
-				email: user.rows[0].email,
-			};
+
+			// need to update
+			// Hash password
+			const salt = await bcrypt.genSalt(10);
+			const hashedPassword = await bcrypt.hash(password, salt);
+			const updateQuery = `UPDATE  users SET password = $1 Where id = $2`;
+			await pool.query(updateQuery, [hashedPassword, id]);
+
 			return res.status(200).json({
 				token: _generateToken(user.rows[0].id),
 			});
 		} else {
-			return res.status(401).send("Invalid credentials");
+			return res.status(200).json({ Invalid: "Invalid credentials" });
 		}
 	} catch (error) {
 		next(error);
@@ -73,15 +76,23 @@ export async function registerUser(req: Request<{}, never, registerUserPayload>,
 	try {
 		const validateToken = await axios.post(`https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_KEY}&response=${token}`);
 		if (validateToken.data.success) {
+			// Check for user email
+			const userQuery = "SELECT * FROM users WHERE email = $1";
+			const user = await pool.query(userQuery, [email]);
+			console.log(user.rows[0]);
+			if (user.rows[0]) {
+				return res.status(200).json({ userExist: "User already exist" });
+			}
+
 			// Hash password
 			const salt = await bcrypt.genSalt(10);
 			const hashedPassword = await bcrypt.hash(password, salt);
 			const query = `INSERT INTO users(email,password) VALUES($1,$2) RETURNING *`;
 			const values = [email, hashedPassword];
 			const self = await pool.query(query, values);
-			return res.status(200).json(self.rows[0]);
+			return res.status(200).json({ user: self.rows[0] });
 		} else {
-			return res.status(402).json("fail");
+			return res.status(200).json({ failToken: "fail" });
 		}
 	} catch (error) {
 		next(error);
@@ -149,7 +160,7 @@ export async function getUserInfo(req: Request<{}, never, { token: string; id: n
 	}
 }
 
-// @desc    Reset user password
+// @desc    Password reset request ,sending email with link for reset.
 // @route   POST /api/v1/users/password-reset
 // @access  public
 export async function passwordReset(req: Request<{}, never, { email: string }>, res: Response, next: NextFunction) {
@@ -161,9 +172,10 @@ export async function passwordReset(req: Request<{}, never, { email: string }>, 
 	const user = await pool.query(userQuery, [email]);
 
 	if (user.rows[0] === undefined) {
-		return res.status(200).json({ message: "No user" });
+		return res.status(200).json({ noUser: "No user" });
 	}
 	const user_id = user.rows[0].id;
+
 	//create new token
 	const token = _generateToken(user_id, "15m");
 	// console.log(`token  ${token}`);
