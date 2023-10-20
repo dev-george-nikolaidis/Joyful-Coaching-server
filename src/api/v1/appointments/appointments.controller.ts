@@ -19,7 +19,7 @@ export async function buySessionPacket(req: Request<{}, never, SessionPacketT>, 
 	const { amount, cost, level, price, service } = req.body.sessionPacket;
 
 	// https://imageupload.io/ib/5VB9fgdTEVpLt6b_1697104946.png
-	const YOUR_DOMAIN = "http://localhost:5173";
+	const YOUR_DOMAIN = process.env.Client_DOMAIN || "http://localhost:5173";
 	try {
 		const session = await stripe.checkout.sessions.create({
 			line_items: [
@@ -81,11 +81,12 @@ export async function confirmOrder(req: Request<{}, never, { session_id: string;
 // @access  Private
 export async function checkAvailability(req: Request<{}, never, { data: Date }>, res: Response, next: NextFunction) {
 	const { data } = req.body;
+	console.log(data);
 
 	// check if there is date
 	const fetchDateQuery = "SELECT * FROM  appointments where date = $1";
 	const date = await pool.query(fetchDateQuery, [data]);
-	// console.log(date.rows.length);
+	console.log(date.rows.length);
 
 	if (date.rows.length === 0) {
 		res.status(200).send("free");

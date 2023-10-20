@@ -4,6 +4,7 @@ import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 import { pool } from "../config/db";
+import { convertAppointmentNumberToDate } from "../util/helpers";
 import { loginUserPayload, registerUserPayload } from "./users.interfaces";
 
 // @desc    login user
@@ -79,7 +80,7 @@ export async function registerUser(req: Request<{}, never, registerUserPayload>,
 			// Check for user email
 			const userQuery = "SELECT * FROM users WHERE email = $1";
 			const user = await pool.query(userQuery, [email]);
-			console.log(user.rows[0]);
+			// console.log(user.rows[0]);
 			if (user.rows[0]) {
 				return res.status(200).json({ userExist: "User already exist" });
 			}
@@ -138,18 +139,23 @@ export async function getUserInfo(req: Request<{}, never, { token: string; id: n
 	try {
 		const userQuery = "SELECT * FROM users WHERE id = $1";
 		const user = await pool.query(userQuery, [id]);
-
 		const getSessions = "SELECT * FROM appointments WHERE user_id = $1 ORDER BY date;";
 		const appointments = await pool.query(getSessions, [id]);
 
+		const pastAppointments = [];
+		const today = new Date();
+
 		const currentOpenAppointments = appointments.rows.filter((a) => {
-			const today = new Date();
-			const appointmentDate = new Date(a.date);
+			let appointmentDate = convertAppointmentNumberToDate(a.appointment, a.date);
+			console.log(appointmentDate);
 
 			if (today.getTime() < appointmentDate.getTime()) {
 				return a;
+			} else {
+				pastAppointments.push(a);
 			}
 		});
+
 		const payload = {
 			userTable: user.rows[0],
 			appointmentsTable: currentOpenAppointments,
