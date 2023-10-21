@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
-import { pool } from "../config/db";
+import { pool } from "../config/dbPool";
 
 interface JwtPayload {
 	id: string;

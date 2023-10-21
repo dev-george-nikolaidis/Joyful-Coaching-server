@@ -1,9 +1,9 @@
 import { Router } from "express";
-import { protectedRoute } from "../middlewares/protected-route";
+import { protectedRoute } from "../middlewares/protectedRoute";
 import { validate } from "../middlewares/validate";
 
-import * as usersController from "./users.controller";
-import { passwordResetSchema, userLoginSchema, userRegisterSchema } from "./users.schemas";
+import * as usersController from "./usersController";
+import { passwordResetSchema, userLoginSchema, userRegisterSchema } from "./usersSchemas";
 
 const router = Router();
 

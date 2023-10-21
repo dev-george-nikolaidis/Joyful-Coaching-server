@@ -27,3 +27,13 @@ export const contactUsSchema = z.object({
 		}),
 	}),
 });
+
+export const newsletterSchema = z.object({
+	body: z.object({
+		email: z
+			.string({
+				required_error: "Email is required",
+			})
+			.email("Not a valid email"),
+	}),
+});

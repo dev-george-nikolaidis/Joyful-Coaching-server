@@ -5,9 +5,9 @@ import express from "express";
 import helmet from "helmet";
 import morgan from "morgan";
 
-import api from "./v1/index-routes";
-import { errorHandler } from "./v1/middlewares/error-handler";
-import { notFound } from "./v1/middlewares/not-found";
+import api from "./v1/indexRoutes";
+import { errorHandler } from "./v1/middlewares/errorHandler";
+import { notFound } from "./v1/middlewares/notFound";
 
 const app = express();
 dotenv.config();

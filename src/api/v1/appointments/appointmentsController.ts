@@ -1,8 +1,8 @@
 import dotenv from "dotenv";
 import { NextFunction, Request, Response } from "express";
 import { Stripe } from "stripe";
-import { pool } from "../config/db";
-import { SessionPacketT } from "./appointments.types";
+import { pool } from "../config/dbPool";
+import { SessionPacketT } from "./appointmentsTypes";
 
 dotenv.config();
 
@@ -18,7 +18,6 @@ export async function buySessionPacket(req: Request<{}, never, SessionPacketT>, 
 	// const items = req.body.items;
 	const { amount, cost, level, price, service } = req.body.sessionPacket;
 
-	// https://imageupload.io/ib/5VB9fgdTEVpLt6b_1697104946.png
 	const YOUR_DOMAIN = process.env.Client_DOMAIN || "http://localhost:5173";
 	try {
 		const session = await stripe.checkout.sessions.create({
@@ -29,7 +28,7 @@ export async function buySessionPacket(req: Request<{}, never, SessionPacketT>, 
 						product_data: {
 							name: `Packlet: ${level}`,
 							description: service,
-							images: ["https://imageupload.io/ib/5VB9fgdTEVpLt6b_1697104946.png"],
+							images: ["https://res.cloudinary.com/dsrzlxnkc/image/upload/v1697880142/Joyful%20Coaching/session-packet_ag84qf.webp"],
 						},
 						unit_amount: cost * 100,
 					},

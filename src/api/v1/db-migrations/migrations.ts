@@ -1,10 +1,11 @@
-import { pool } from "../config/db";
-import { appointments, contract, usersModel } from "../database/db.models";
+import { pool } from "../config/dbPool";
+import { appointments, contract, newsletter, usersModel } from "../database/dbModels";
 
 const migrate = async () => {
 	await pool.query(usersModel);
 	await pool.query(appointments);
 	await pool.query(contract);
+	await pool.query(newsletter);
 };
 
 try {

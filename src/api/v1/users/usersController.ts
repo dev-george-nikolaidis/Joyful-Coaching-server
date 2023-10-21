@@ -3,9 +3,9 @@ import bcrypt from "bcrypt";
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
-import { pool } from "../config/db";
+import { pool } from "../config/dbPool";
 import { convertAppointmentNumberToDate } from "../util/helpers";
-import { loginUserPayload, registerUserPayload } from "./users.interfaces";
+import { loginUserPayload, registerUserPayload } from "./usersInterfaces";
 
 // @desc    login user
 // @route   GET /api/v1/users/login

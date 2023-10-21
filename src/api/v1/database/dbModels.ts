@@ -34,5 +34,11 @@ CREATE TABLE IF NOT EXISTS  contact(
 	created_on timestamp default CURRENT_TIMESTAMP not null
 )`;
 
+export const newsletter = `
+CREATE TABLE IF NOT EXISTS  newsletter(
+	id SERIAL PRIMARY KEY,
+	email text  NOT NULL
+)`;
+
 // drop schema public cascade;
 // create schema public;

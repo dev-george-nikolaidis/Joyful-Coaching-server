@@ -1,9 +1,9 @@
 import express from "express";
 const router = express.Router();
 
-import appointmentsRoutes from "../v1/appointments/appointments.routes";
-import contactRoutes from "../v1/contact/contact.routes";
-import usersRoutes from "../v1/users/users.routes";
+import appointmentsRoutes from "./appointments/appointmentsRoutes";
+import contactRoutes from "./contact/contactRoutes";
+import usersRoutes from "./users/usersRoutes";
 
 router.use("/users", usersRoutes);
 

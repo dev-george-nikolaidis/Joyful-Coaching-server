@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { protectedRoute } from "../middlewares/protected-route";
-import * as appointmentsController from "./appointments.controller";
+import { protectedRoute } from "../middlewares/protectedRoute";
+import * as appointmentsController from "./appointmentsController";
 const router = Router();
 
 router.post("/buy", protectedRoute, appointmentsController.buySessionPacket);
