@@ -1,5 +1,6 @@
 import axios from "axios";
 import bcrypt from "bcrypt";
+import dotenv from "dotenv";
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
@@ -7,6 +8,7 @@ import { pool } from "../config/dbPool";
 import { convertAppointmentNumberToDate } from "../util/helpers";
 import { loginUserPayload, registerUserPayload } from "./usersInterfaces";
 
+dotenv.config();
 // @desc    login user
 // @route   GET /api/v1/users/login
 // @access  public
@@ -73,11 +75,10 @@ export async function passwordRestLogin(req: Request<{}, never, { id: number; pa
 // @access  Private
 export async function registerUser(req: Request<{}, never, registerUserPayload>, res: Response, next: NextFunction) {
 	const { email, password, token } = req.body;
-	console.log("IN Register");
+
 	try {
 		const validateToken = await axios.post(`https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_KEY}&response=${token}`);
 		if (validateToken.data.success) {
-			console.log("Token validation");
 			// Check for user email
 			const userQuery = "SELECT * FROM users WHERE email = $1";
 			const user = await pool.query(userQuery, [email]);
@@ -85,7 +86,6 @@ export async function registerUser(req: Request<{}, never, registerUserPayload>,
 			if (user.rows[0]) {
 				return res.status(200).json({ userExist: "User already exist" });
 			}
-			console.log("Hashing password");
 			// Hash password
 			const salt = await bcrypt.genSalt(10);
 			const hashedPassword = await bcrypt.hash(password, salt);
@@ -97,7 +97,6 @@ export async function registerUser(req: Request<{}, never, registerUserPayload>,
 			return res.status(200).json({ failToken: "fail" });
 		}
 	} catch (error) {
-		console.log("Error ");
 		next(error);
 	}
 }
