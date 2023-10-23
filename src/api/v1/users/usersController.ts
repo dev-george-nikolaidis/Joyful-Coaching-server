@@ -77,7 +77,7 @@ export async function registerUser(req: Request<{}, never, registerUserPayload>,
 	const { email, password, token } = req.body;
 
 	try {
-		const validateToken = await axios.post(`https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_KEY}&response=${token}`);
+		const validateToken = await await axios.post(`https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_KEY}&response=${token}`);
 		if (validateToken.data.success) {
 			// Check for user email
 			const userQuery = "SELECT * FROM users WHERE email = $1";
