@@ -19,6 +19,7 @@ app.use(
 		origin: "*",
 	})
 );
+
 app.use(express.json(), cookieParser());
 
 app.use("/api/v1", api);
