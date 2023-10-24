@@ -8,7 +8,7 @@ interface JwtPayload {
 
 export const protectedRoute = async (req: Request<any>, res: Response, next: NextFunction) => {
 	let token;
-
+	let verify;
 	try {
 		if (req.headers.authorization && req.headers.authorization.startsWith("Bearer")) {
 			// Get token from header
@@ -17,16 +17,16 @@ export const protectedRoute = async (req: Request<any>, res: Response, next: Nex
 			// console.log(`token ${token}`);
 			const jwtSecret = process.env.JWT_SECRET!;
 			// Verify token
-			const { id } = jwt.verify(token, jwtSecret) as JwtPayload;
+			verify = jwt.verify(token, jwtSecret);
 
 			// Get user from the token
 			// const query = "SELECT * FROM users WHERE id = $1";
 			// const user = await pool.query(query, [id]);
-			req.body.id = id;
+			req.body.id = verify;
 			next();
 		}
 	} catch (error) {
-		return res.status(401).json({ Unauthorized: { message: "Unauthorized Bearer", token: token, jwtSecret: process.env.JWT_SECRET! } });
+		return res.status(401).json({ Unauthorized: { message: "Unauthorized Bearer", token: token, jwtSecret: process.env.JWT_SECRET!, verify: verify } });
 	}
 
 	if (!token) {
