@@ -25,7 +25,7 @@ export const protectedRoute = async (req: Request<any>, res: Response, next: Nex
 			next();
 		}
 	} catch (error) {
-		return res.status(401).json("Unauthorized");
+		return res.status(401).json("Unauthorized Bearer");
 	}
 
 	if (!token) {

@@ -16,7 +16,7 @@ app.use(morgan("dev"));
 app.use(helmet());
 
 const corsOpt = {
-	origin: "*",
+	origin: ["https://joyful-coaching.netlify.app/", "http://127.0.0.1:5173/"],
 	methods: ["GET", "PUT", "POST", "DELETE", "OPTIONS"],
 	allowedHeaders: ["Content-Type", "Authorization"],
 };
@@ -29,7 +29,6 @@ app.use("/api/v1", api);
 app.use(notFound);
 app.use(errorHandler);
 
-const port = process.env.PORT || 5000;
-app.listen(port, () => {
-	console.log(`Listening: http://localhost:${port}`);
+app.listen("", () => {
+	console.log(`Server is running`);
 });
