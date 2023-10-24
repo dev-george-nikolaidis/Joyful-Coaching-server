@@ -17,12 +17,13 @@ export const protectedRoute = async (req: Request<any>, res: Response, next: Nex
 			// console.log(`token ${token}`);
 			const jwtSecret = process.env.JWT_SECRET!;
 			// Verify token
-			verify = jwt.verify(token, jwtSecret) as JwtPayload;
+			const { id } = jwt.verify(token, jwtSecret) as JwtPayload;
 
 			// Get user from the token
 			// const query = "SELECT * FROM users WHERE id = $1";
 			// const user = await pool.query(query, [id]);
-			req.body.id = verify;
+			req.body.id = id;
+			verify = id;
 			next();
 		}
 	} catch (error) {

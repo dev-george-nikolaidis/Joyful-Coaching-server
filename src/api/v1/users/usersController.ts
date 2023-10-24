@@ -136,6 +136,7 @@ export async function updatePassword(req: Request<{}, never, { password: string;
 
 export async function getUserInfo(req: Request<{}, never, { token: string; id: number }>, res: Response, next: NextFunction) {
 	const { id } = req.body;
+	console.log(`getUserInfo ${id}`);
 
 	try {
 		const userQuery = "SELECT * FROM users WHERE id = $1";
