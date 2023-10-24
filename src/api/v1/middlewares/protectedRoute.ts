@@ -1,6 +1,7 @@
+import dotenv from "dotenv";
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
-
+dotenv.config();
 interface JwtPayload {
 	id: string;
 }
