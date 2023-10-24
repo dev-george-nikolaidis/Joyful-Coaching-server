@@ -10,7 +10,8 @@ export const protectedRoute = async (req: Request<any>, res: Response, next: Nex
 	let token;
 	let verify;
 	try {
-		if (req.headers.authorization && req.headers.authorization.startsWith("Bearer")) {
+		// if (req.headers.authorization && req.headers.authorization.startsWith("Bearer")) {
+		if (req.headers.authorization) {
 			// Get token from header
 			// console.log(`req.headers.authorization ${req.headers.authorization}`);
 			token = req.headers.authorization.split(" ")[1];
@@ -27,7 +28,7 @@ export const protectedRoute = async (req: Request<any>, res: Response, next: Nex
 			next();
 		}
 	} catch (error) {
-		return res.status(401).json({ Unauthorized: { message: "Unauthorized Bearer", token: token, jwtSecret: process.env.JWT_SECRET!, id: verify } });
+		return res.status(401).json({ Unauthorized: { message: "Unauthorized Bearer", token: token, jwtSecret: process.env.JWT_SECRET!, payload: verify } });
 	}
 
 	if (!token) {
