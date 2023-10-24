@@ -15,7 +15,14 @@ dotenv.config();
 app.use(morgan("dev"));
 app.use(helmet());
 
-app.use(cors(), express.json(), cookieParser());
+const corsOpt = {
+	origin: "*",
+	methods: ["GET", "PUT", "POST", "DELETE", "OPTIONS"],
+	allowedHeaders: ["Content-Type", "Authorization"],
+};
+app.use(cors(corsOpt));
+
+app.use(express.json(), cookieParser());
 
 app.use("/api/v1", api);
 
