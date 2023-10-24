@@ -21,7 +21,7 @@ const corsOpt = {
 	allowedHeaders: ["Content-Type", "Authorization"],
 };
 
-app.use(cors(corsOpt));
+app.use(cors());
 
 app.use(express.json(), cookieParser());
 
@@ -30,6 +30,7 @@ app.use("/api/v1", api);
 app.use(notFound);
 app.use(errorHandler);
 
-app.listen("", () => {
+const port = process.env.PORT || 5000;
+app.listen(port, () => {
 	console.log(`Server is running`);
 });
