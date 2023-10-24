@@ -5,9 +5,6 @@ const lazyLoad = createLazyRouter({
 	preload: process.env.NODE_ENV === "production",
 });
 const router = express.Router();
-router.get("/welcome", (req, res) => {
-	res.send("Welcome");
-});
 
 router.use(
 	"/users",
