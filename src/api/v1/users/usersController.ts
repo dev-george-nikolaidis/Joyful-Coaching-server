@@ -28,7 +28,7 @@ export async function loginUser(req: Request<{}, never, loginUserPayload>, res: 
 			};
 
 			return res.status(200).json({
-				token: _generateToken(user.rows[0].id, ""),
+				token: _generateToken(user.rows[0].id),
 			});
 		} else {
 			return res.status(200).json({ Invalid: "Invalid credentials" });
@@ -60,7 +60,7 @@ export async function passwordRestLogin(req: Request<{}, never, { id: number; pa
 			await pool.query(updateQuery, [hashedPassword, id]);
 
 			return res.status(200).json({
-				token: _generateToken(user.rows[0].id, ""),
+				token: _generateToken(user.rows[0].id),
 			});
 		} else {
 			return res.status(200).json({ Invalid: "Invalid credentials" });
@@ -124,7 +124,7 @@ export async function updatePassword(req: Request<{}, never, { password: string;
 		const newToken = await pool.query(query, [id]);
 		const updatedUser = await pool.query(query, [id]);
 		//send back the new one
-		return res.status(200).json(_generateToken(updatedUser.rows[0].id, ""));
+		return res.status(200).json(_generateToken(updatedUser.rows[0].id));
 	} catch (error) {
 		next(error);
 	}
