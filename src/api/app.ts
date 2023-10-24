@@ -15,13 +15,7 @@ dotenv.config();
 app.use(morgan("dev"));
 app.use(helmet());
 
-app.use(
-	cors({
-		origin: "*",
-	}),
-	express.json(),
-	cookieParser()
-);
+app.use(cors(), express.json(), cookieParser());
 
 app.use("/api/v1", api);
 
