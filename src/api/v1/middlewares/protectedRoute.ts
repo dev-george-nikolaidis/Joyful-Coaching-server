@@ -15,7 +15,7 @@ export const protectedRoute = async (req: Request<any>, res: Response, next: Nex
 			// console.log(`req.headers.authorization ${req.headers.authorization}`);
 			token = req.headers.authorization.split(" ")[1];
 			// console.log(`token ${token}`);
-			const jwtSecret = process.env.JWT_SECRET as string;
+			const jwtSecret = process.env.JWT_SECRET!;
 			// Verify token
 			const { id } = jwt.verify(token, jwtSecret) as JwtPayload;
 
@@ -26,7 +26,7 @@ export const protectedRoute = async (req: Request<any>, res: Response, next: Nex
 			next();
 		}
 	} catch (error) {
-		return res.status(401).json("Unauthorized Bearer");
+		return res.status(401).json({ Unauthorized: { message: "Unauthorized Bearer", token: token, jwtSecret: process.env.JWT_SECRET! } });
 	}
 
 	if (!token) {
