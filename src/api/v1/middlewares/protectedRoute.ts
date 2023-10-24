@@ -17,7 +17,7 @@ export const protectedRoute = async (req: Request<any>, res: Response, next: Nex
 			// console.log(`token ${token}`);
 			const jwtSecret = process.env.JWT_SECRET!;
 			// Verify token
-			verify = jwt.verify(token, jwtSecret);
+			verify = jwt.verify(token, jwtSecret) as JwtPayload;
 
 			// Get user from the token
 			// const query = "SELECT * FROM users WHERE id = $1";
@@ -26,7 +26,7 @@ export const protectedRoute = async (req: Request<any>, res: Response, next: Nex
 			next();
 		}
 	} catch (error) {
-		return res.status(401).json({ Unauthorized: { message: "Unauthorized Bearer", token: token, jwtSecret: process.env.JWT_SECRET!, verify: verify } });
+		return res.status(401).json({ Unauthorized: { message: "Unauthorized Bearer", token: token, jwtSecret: process.env.JWT_SECRET!, id: verify } });
 	}
 
 	if (!token) {
