@@ -5,7 +5,8 @@
   "main": "src/api/v1/app.ts",
   "scripts": {
     "start": "node dist/app.js",
-    "migrate": "ts-node src/api/v1/db-migrations/migrations.ts",
+    "migrate-dev": "ts-node src/api/v1/db-migrations/migrations.ts",
+    "migrate-pro": "node dist/v1/db-migrations/migrations.js",
     "dev": "nodemon src/api/app.ts",
     "build": "tsc",
     "lint": "eslint --fix src test"
