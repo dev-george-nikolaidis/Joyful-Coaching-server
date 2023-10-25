@@ -37,7 +37,7 @@ export async function buySessionPacket(req: Request<{}, never, SessionPacketT>, 
 			],
 			mode: "payment",
 			// success_url: `${YOUR_DOMAIN}/checkout-success`,
-			success_url: `${YOUR_DOMAIN}`,
+			success_url: `${YOUR_DOMAIN}?success=true`,
 			cancel_url: `${YOUR_DOMAIN}`,
 		});
 
