@@ -227,12 +227,13 @@ export async function passwordReset(req: Request<{}, never, { email: string }>, 
 
 // Generate JWT
 const _generateToken = (id: any, customExpirationTime?: string) => {
-	const jwtSecret = process.env.JWT_SECRET as string;
+	const jwtSecret = process.env.JWT_SECRET!;
+
 	let jwtExpTime;
 	if (customExpirationTime) {
 		jwtExpTime = customExpirationTime;
 	} else {
-		jwtExpTime = process.env.JWT_TOKEN_EXPIRATION || 1;
+		jwtExpTime = process.env.JWT_TOKEN_EXPIRATION;
 	}
 
 	return jwt.sign({ id }, jwtSecret, {
