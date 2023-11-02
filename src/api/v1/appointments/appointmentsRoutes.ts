@@ -3,6 +3,7 @@ import { protectedRoute } from "../middlewares/protectedRoute";
 import * as appointmentsController from "./appointmentsController";
 const router = Router();
 
+// private
 router.post("/buy", protectedRoute, appointmentsController.buySessionPacket);
 router.post("/check-availability", protectedRoute, appointmentsController.checkAvailability);
 router.post("/confirm", protectedRoute, appointmentsController.confirmOrder);

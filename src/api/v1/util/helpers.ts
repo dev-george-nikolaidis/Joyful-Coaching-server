@@ -1,3 +1,8 @@
+import dotenv from "dotenv";
+import jwt from "jsonwebtoken";
+
+dotenv.config();
+
 export function calculateAppointmentTime(d: Date, hour: string, minutes: string) {
 	const date = new Date(d);
 	const day = date.getDate().toString();
@@ -35,4 +40,27 @@ export const convertAppointmentNumberToDate = (num: number, d: Date) => {
 	}
 
 	return date;
+};
+
+// Generate JWT
+export const generateToken = (id: any, customExpirationTime?: number) => {
+	const jwtSecret = process.env.JWT_SECRET!;
+
+	let jwtExpTime;
+	if (customExpirationTime) {
+		jwtExpTime = customExpirationTime;
+	} else {
+		jwtExpTime = process.env.JWT_TOKEN_EXPIRATION;
+	}
+
+	return jwt.sign({ id }, jwtSecret, {
+		expiresIn: jwtExpTime,
+	});
+};
+
+// Generate refresh  JWT token
+export const generateRefreshToken = (id: string) => {
+	return jwt.sign({ id: id }, process.env.JWT_REFRESH_SECRET!, {
+		expiresIn: process.env.JWT_REFRESH_TOKEN_EXPIRATION!,
+	});
 };

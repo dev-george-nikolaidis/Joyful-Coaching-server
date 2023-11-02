@@ -22,4 +22,9 @@ router.use(
 	lazyLoad(() => import("./contact/contactRoutes"))
 );
 
+// router.use(
+// 	"/auth",
+// 	lazyLoad(() => import("./auth/authRoutes"))
+// );
+
 export default router;

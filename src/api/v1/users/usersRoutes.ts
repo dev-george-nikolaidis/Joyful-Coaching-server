@@ -9,10 +9,12 @@ const router = Router();
 
 // public
 router.post("/login", validate(userLoginSchema), usersController.loginUser);
+// router.post("/google/login", validate(userLoginSchema), usersController.loginUser);
 router.post("/register", validate(userRegisterSchema), usersController.registerUser);
 router.post("/password-reset", validate(passwordResetSchema), usersController.passwordReset);
 
 //private
+// router.post("/logout", protectedRoute, usersController.logout);
 router.post("/account", protectedRoute, usersController.getUserInfo);
 router.put("/password-update", protectedRoute, usersController.updatePassword);
 router.put("/password-rest-login", protectedRoute, usersController.passwordRestLogin);
