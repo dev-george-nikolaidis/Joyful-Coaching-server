@@ -2,12 +2,10 @@ import axios from "axios";
 import bcrypt from "bcrypt";
 import dotenv from "dotenv";
 import { NextFunction, Request, Response } from "express";
-
 import nodemailer from "nodemailer";
 import { pool } from "../config/dbPool";
 import { convertAppointmentNumberToDate, generateToken } from "../util/helpers";
 import { googleUser, linkedinUser, loginUserPayload, registerUserPayload } from "./usersInterfaces";
-
 dotenv.config();
 
 // @desc    login user
@@ -79,7 +77,6 @@ export async function passwordRestLogin(req: Request<{}, never, { id: number; pa
 // @desc    create  user with  google auth
 // @route   POST /api/v1/users/auth/google
 // @access  private
-
 export async function googleRegister(req: Request<{}, never, any>, res: Response, next: NextFunction) {
 	const { emails } = req.user as googleUser;
 	const email = emails[0].value;
@@ -107,10 +104,10 @@ export async function googleRegister(req: Request<{}, never, any>, res: Response
 		next(error);
 	}
 }
+
 // @desc    create  user with  facebook auth
 // @route   POST /api/v1/users/auth/facebook
 // @access  private
-
 export async function facebookRegister(req: Request<{}, never, any>, res: Response, next: NextFunction) {
 	// todo , the api does not return email
 	try {
@@ -226,7 +223,6 @@ export async function updatePassword(req: Request<{}, never, { password: string;
 // @desc    Logout user
 // @route   POST /api/v1/users/logout
 // @access  private
-
 export async function logout(req: Request<{}, never, { id: number }>, res: Response, next: NextFunction) {
 	const { id } = req.body;
 
@@ -245,7 +241,6 @@ export async function logout(req: Request<{}, never, { id: number }>, res: Respo
 // @desc    get user infos
 // @route   POST /api/v1/users/account-info
 // @access  private
-
 export async function getUserInfo(req: Request<{}, never, { token: string; id: number }>, res: Response, next: NextFunction) {
 	const { id } = req.body;
 
