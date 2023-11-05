@@ -16,14 +16,14 @@ dotenv.config();
 app.use(morgan("dev"));
 app.use(helmet());
 
-const corsOptions = {
-	origin: "*",
-	methods: ["GET", "PUT", "POST", "DELETE", "OPTIONS"],
-	allowedHeaders: ["Content-Type", "Authorization"],
-	credentials: true,
-};
+// const corsOptions = {
+// 	origin: "*",
+// 	methods: ["GET", "PUT", "POST", "DELETE", "OPTIONS"],
+// 	allowedHeaders: ["Content-Type", "Authorization"],
+// 	credentials: true,
+// };
 
-app.use(cors(corsOptions));
+app.use(cors());
 
 app.use(express.json());
 
