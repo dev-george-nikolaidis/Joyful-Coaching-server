@@ -18,7 +18,7 @@ export async function buySessionPacket(req: Request<{}, never, SessionPacketT>, 
 	// const items = req.body.items;
 	const { amount, cost, level, price, service } = req.body.sessionPacket;
 
-	const YOUR_DOMAIN = process.env.Client_DOMAIN || "http://localhost:5173";
+	const YOUR_DOMAIN = process.env.CLIENT_DOMAIN || "http://localhost:5173";
 	try {
 		const session = await stripe.checkout.sessions.create({
 			line_items: [

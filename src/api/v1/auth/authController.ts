@@ -69,3 +69,10 @@ export async function refreshCookieToken(req: Request<{}, never, {}>, res: Respo
 		return res.status(400).send("Invalid refresh token.");
 	}
 }
+
+// @desc    validate token
+// @route   post /api/v1/auth/token
+// @access  private
+export async function validateToken(req: Request<{}, never, {}>, res: Response, next: NextFunction) {
+	return res.status(200).json({ legitToken: "User is authorized" });
+}

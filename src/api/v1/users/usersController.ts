@@ -6,37 +6,9 @@ import { NextFunction, Request, Response } from "express";
 import nodemailer from "nodemailer";
 import { pool } from "../config/dbPool";
 import { convertAppointmentNumberToDate, generateToken } from "../util/helpers";
-import { loginUserPayload, registerUserPayload } from "./usersInterfaces";
+import { googleUser, linkedinUser, loginUserPayload, registerUserPayload } from "./usersInterfaces";
 
 dotenv.config();
-
-// @desc    login user with google
-// @route   GET /api/v1/users/google/login
-// @access  public
-export async function googleLoginUser(req: Request<{}, never, loginUserPayload>, res: Response, next: NextFunction) {
-	// TODO
-	// const { email, password } = req.body;
-	// try {
-	// 	// Check for user email
-	// 	const query = "SELECT * FROM users WHERE email = $1";
-	// 	const user = await pool.query(query, [email]);
-	// 	if (user.rows[0] && (await bcrypt.compare(password, user.rows[0].password))) {
-	// 		// we need those critical details about the user in the client ?
-	// 		const self = {
-	// 			id: user.rows[0].id,
-	// 			// username: user.rows[0].username,
-	// 			email: user.rows[0].email,
-	// 		};
-	// 		return res.status(200).json({
-	// 			token: generateToken(user.rows[0].id),
-	// 		});
-	// 	} else {
-	// 		return res.status(200).json({ Invalid: "Invalid credentials" });
-	// 	}
-	// } catch (error) {
-	// 	next(error);
-	// }
-}
 
 // @desc    login user
 // @route   GET /api/v1/users/login
@@ -83,7 +55,6 @@ export async function passwordRestLogin(req: Request<{}, never, { id: number; pa
 		// Check for user email
 		const query = "SELECT * FROM users WHERE id = $1";
 		const user = await pool.query(query, [id]);
-		console.log(user);
 		if (user.rows[0].password_reset_token === token) {
 			// we need those critical details about the user in the client ?
 
@@ -105,6 +76,81 @@ export async function passwordRestLogin(req: Request<{}, never, { id: number; pa
 	}
 }
 
+// @desc    create  user with  google auth
+// @route   POST /api/v1/users/auth/google
+// @access  private
+
+export async function googleRegister(req: Request<{}, never, any>, res: Response, next: NextFunction) {
+	const { emails } = req.user as googleUser;
+	const email = emails[0].value;
+
+	try {
+		// check if user already exist
+		const query = "SELECT * FROM users WHERE email = $1";
+		const user = await pool.query(query, [email]);
+
+		if (user.rows.length > 0) {
+			const token = generateToken(user.rows[0].id);
+			return res.status(200).redirect(`${process.env.CLIENT_DOMAIN}/user/OAuth2/?token=${token}`);
+		}
+
+		const insertUserQuery = `INSERT INTO users(email,login_strategy) VALUES($1,$2) RETURNING *`;
+		await pool.query(insertUserQuery, [email, "google"]);
+
+		const userQuery = "SELECT * FROM users WHERE email = $1";
+		const updatedUser = await pool.query(userQuery, [email]);
+
+		const token = generateToken(updatedUser.rows[0].id);
+
+		return res.status(200).redirect(`${process.env.CLIENT_DOMAIN}/user/OAuth2/?token=${token}`);
+	} catch (error) {
+		next(error);
+	}
+}
+// @desc    create  user with  facebook auth
+// @route   POST /api/v1/users/auth/facebook
+// @access  private
+
+export async function facebookRegister(req: Request<{}, never, any>, res: Response, next: NextFunction) {
+	// todo , the api does not return email
+	try {
+		// console.log(req.user);
+		res.json(req.user);
+		// return res.status(200).redirect(`${process.env.CLIENT_DOMAIN}/user/OAuth2/?token=${token}`);
+	} catch (error) {
+		next(error);
+	}
+}
+
+// @desc    create  user with  linkedin auth
+// @route   POST /api/v1/users/auth/linkedin
+// @access  private
+export async function linkedinRegister(req: Request<{}, never, any>, res: Response, next: NextFunction) {
+	const { email } = req.user as linkedinUser;
+	try {
+		// check if user already exist
+		const query = "SELECT * FROM users WHERE email = $1";
+		const user = await pool.query(query, [email]);
+
+		if (user.rows.length > 0) {
+			const token = generateToken(user.rows[0].id);
+			return res.status(200).redirect(`${process.env.CLIENT_DOMAIN}/user/OAuth2/?token=${token}`);
+		}
+
+		const insertUserQuery = `INSERT INTO users(email,login_strategy) VALUES($1,$2) RETURNING *`;
+		await pool.query(insertUserQuery, [email, "linkedin"]);
+
+		const userQuery = "SELECT * FROM users WHERE email = $1";
+		const updatedUser = await pool.query(userQuery, [email]);
+
+		const token = generateToken(updatedUser.rows[0].id);
+
+		return res.status(200).redirect(`${process.env.CLIENT_DOMAIN}/user/OAuth2/?token=${token}`);
+	} catch (error) {
+		next(error);
+	}
+}
+
 // @desc    create  user
 // @route   POST /api/v1/users/register
 // @access  Private
@@ -118,12 +164,25 @@ export async function registerUser(req: Request<{}, never, registerUserPayload>,
 			const userQuery = "SELECT * FROM users WHERE email = $1";
 			const user = await pool.query(userQuery, [email]);
 			// console.log(user.rows[0]);
-			if (user.rows[0]) {
+			if (user.rows[0] && user.rows[0].password) {
 				return res.status(200).json({ userExist: "User already exist" });
 			}
+
 			// Hash password
 			const salt = await bcrypt.genSalt(10);
 			const hashedPassword = await bcrypt.hash(password, salt);
+
+			// if the user logged with google OAuth before he do not have password, so we need to update
+			if (user.rows[0] && !user.rows[0].password) {
+				//update in database
+				console.log("update");
+				const updateQuery = `UPDATE  users SET password = $1 Where id = $2 RETURNING *`;
+				const self = await pool.query(updateQuery, [hashedPassword, user.rows[0].id]);
+				console.log(self.rows[0]);
+				return res.status(200).json({ user: self.rows[0] });
+			}
+
+			// totally new user
 			const query = `INSERT INTO users(email,password) VALUES($1,$2) RETURNING *`;
 			const values = [email, hashedPassword];
 			const self = await pool.query(query, values);
@@ -139,7 +198,6 @@ export async function registerUser(req: Request<{}, never, registerUserPayload>,
 // @desc    update password
 // @route   PUT /api/v1/users/password-update
 // @access  private
-
 export async function updatePassword(req: Request<{}, never, { password: string; id: number }>, res: Response, next: NextFunction) {
 	const { id, password } = req.body;
 
@@ -173,11 +231,11 @@ export async function logout(req: Request<{}, never, { id: number }>, res: Respo
 	const { id } = req.body;
 
 	try {
-		//update in database
-		// const updateQuery = `UPDATE  users SET refresh_token = $1 Where id = $2`;
-		// await pool.query(updateQuery, ["", id]);
+		// update in database
+		const updateQuery = `UPDATE  users SET refresh_token = $1 Where id = $2`;
+		await pool.query(updateQuery, ["", id]);
 
-		//send back the new one
+		// send back the new one
 		return res.status(200).json("You have been successfully logged out.");
 	} catch (error) {
 		next(error);
@@ -260,7 +318,7 @@ export async function passwordReset(req: Request<{}, never, { email: string }>, 
 		subject: "Reset account password link",
 		html: `
 		<h3>Please click the link below to reset your password</h3>
-		<p>${process.env.Client_DOMAIN}/user/enter-new-password?token=${token}</p>`,
+		<p>${process.env.CLIENT_DOMAIN}/user/enter-new-password?token=${token}</p>`,
 		// text: "Email content",
 	};
 

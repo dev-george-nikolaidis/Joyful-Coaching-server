@@ -1,9 +1,12 @@
 export const usersModel = `
+CREATE TYPE strategies AS ENUM ('local', 'google', 'facebook','linkedin');
+CREATE TYPE roles AS ENUM ('user', 'admin', 'owner');
 CREATE TABLE IF NOT EXISTS  users(
 	id SERIAL PRIMARY KEY,
 	email TEXT NOT NULL UNIQUE,
-	password TEXT NOT NULL,
-	role varchar DEFAULT 'user',
+	password TEXT,
+	role roles DEFAULT 'user',
+	login_strategy strategies DEFAULT Null,
 	appointments  smallint default 0 CHECK(appointments >= 0),
 	password_reset_token TEXT DEFAULT '',
 	created_on timestamp default CURRENT_TIMESTAMP not null,
