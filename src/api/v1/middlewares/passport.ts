@@ -44,7 +44,7 @@ export default function Strategies() {
 			{
 				clientID: process.env.LINKEDIN_CLIENT_ID!,
 				clientSecret: process.env.LINKEDIN_CLIENT_SECRET!,
-				callbackURL: `http://localhost:3001/api/v1/users/auth/linkedin/callback`,
+				callbackURL: `${process.env.BACKEND_API_URL}/users/auth/linkedin/callback`,
 				scope: ["email", "profile", "openid"],
 			},
 			// @ts-ignore comment
