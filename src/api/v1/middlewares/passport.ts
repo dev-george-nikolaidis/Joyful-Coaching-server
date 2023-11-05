@@ -16,6 +16,7 @@ export default function Strategies() {
 				clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
 				callbackURL: `${process.env.BACKEND_API_URL}/users/auth/google/callback`,
 			},
+			// @ts-ignore comment
 			function (_accessToken, _refreshToken, profile, cb) {
 				return cb(null, profile);
 			}
@@ -31,6 +32,7 @@ export default function Strategies() {
 				profileFields: ["id", "displayName", "photos", "email"],
 				enableProof: true,
 			},
+			// @ts-ignore comment
 			function (_accessToken, _refreshToken, profile, cb) {
 				return cb(null, profile);
 			}
@@ -45,6 +47,7 @@ export default function Strategies() {
 				callbackURL: `http://localhost:3001/api/v1/users/auth/linkedin/callback`,
 				scope: ["email", "profile", "openid"],
 			},
+			// @ts-ignore comment
 			function (_accessToken, _refreshToken, profile, done) {
 				// asynchronous verification, for effect...
 				process.nextTick(function () {
@@ -57,12 +60,14 @@ export default function Strategies() {
 			}
 		)
 	);
-
+	// @ts-ignore comment
 	passport.serializeUser((user: any, done) => {
+		// @ts-ignore comment
 		done(null, user.id);
 	});
-
+	// @ts-ignore comment
 	passport.deserializeUser((user: any, done) => {
+		// @ts-ignore comment
 		done(null, user.id);
 	});
 }
